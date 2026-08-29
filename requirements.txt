@@ -1,0 +1,24 @@
+# --- Web framework ---
+fastapi>=0.111,<1
+uvicorn[standard]>=0.30,<1
+python-multipart>=0.0.9
+
+# --- Pydantic & agent ---
+pydantic>=2.7,<3
+# pydantic-ai-slim[mistral] includes the Mistral provider and mistralai SDK
+pydantic-ai-slim[mistral]>=1.0,<3
+
+# --- Firebase Auth ---
+firebase-admin>=6.5,<7
+
+# --- MongoDB (async) ---
+motor>=3.5,<4
+pymongo>=4.8,<5
+
+# --- Art classification ---
+# Art classification is handled by Mistral's vision model — no local HF model needed.
+Pillow>=10.3,<12
+
+# --- Utilities ---
+python-dotenv>=1.0,<2
+requests>=2.31,<3
