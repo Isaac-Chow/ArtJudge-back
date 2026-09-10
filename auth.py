@@ -27,18 +27,21 @@ from models import UserInfo
 
 _firebase_initialized = False
 
-# Resolve the service account JSON path relative to this file
-# _CLOUD_DIR = Path(__file__).resolve().parent / "cloud"
-# _CLOUD_DIR = os.getenv("/etc/secrets/art-judge-5c75c-firebase-adminsdk-fbsvc-bbb2376617.json")
-_CLOUD_DIR = os.getenv("FIREBASE_KEY")
+# Render provides the credential as a file path, while local development uses
+# the repository's cloud/ directory.
+_CLOUD_PATH = Path(
+    os.getenv("FIREBASE_KEY", Path(__file__).resolve().parent / "cloud")
+)
 
 
 def _find_service_account_file() -> Optional[Path]:
-    """Locate the Firebase service account JSON in the cloud/ directory."""
-    if not _CLOUD_DIR.is_dir():
+    """Locate the configured Firebase service account JSON file."""
+    if _CLOUD_PATH.is_file():
+        return _CLOUD_PATH
+    if not _CLOUD_PATH.is_dir():
         return None
     # Match the naming pattern used by Firebase Console
-    matches = list(_CLOUD_DIR.glob("*firebase-adminsdk*.json"))
+    matches = list(_CLOUD_PATH.glob("*firebase-adminsdk*.json"))
     return matches[0] if matches else None
 
 
@@ -53,7 +56,7 @@ def _init_firebase() -> None:
     if sa_file is None:
         print(
             "[auth] WARNING: No Firebase service account JSON found in "
-            f"{_CLOUD_DIR}. Auth-protected endpoints will reject all requests."
+            f"{_CLOUD_PATH}. Auth-protected endpoints will reject all requests."
         )
         return
 
