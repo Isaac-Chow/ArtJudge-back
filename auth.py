@@ -28,7 +28,9 @@ from models import UserInfo
 _firebase_initialized = False
 
 # Resolve the service account JSON path relative to this file
-_CLOUD_DIR = Path(__file__).resolve().parent / "cloud"
+# _CLOUD_DIR = Path(__file__).resolve().parent / "cloud"
+# _CLOUD_DIR = os.getenv("/etc/secrets/art-judge-5c75c-firebase-adminsdk-fbsvc-bbb2376617.json")
+_CLOUD_DIR = os.getenv("FIREBASE_KEY")
 
 
 def _find_service_account_file() -> Optional[Path]:
