@@ -29,8 +29,12 @@ _firebase_initialized = False
 
 # Render provides the credential as a file path, while local development uses
 # the repository's cloud/ directory.
+_configured_cloud_path = os.getenv("FIREBASE_KEY")
+if _configured_cloud_path:
+    _configured_cloud_path = _configured_cloud_path.strip().strip('"').strip("'")
+
 _CLOUD_PATH = Path(
-    os.getenv("FIREBASE_KEY", Path(__file__).resolve().parent / "cloud")
+    _configured_cloud_path or Path(__file__).resolve().parent / "cloud"
 )
 
 
@@ -38,11 +42,18 @@ def _find_service_account_file() -> Optional[Path]:
     """Locate the configured Firebase service account JSON file."""
     if _CLOUD_PATH.is_file():
         return _CLOUD_PATH
-    if not _CLOUD_PATH.is_dir():
-        return None
-    # Match the naming pattern used by Firebase Console
-    matches = list(_CLOUD_PATH.glob("*firebase-adminsdk*.json"))
-    return matches[0] if matches else None
+    if _CLOUD_PATH.is_dir():
+        matches = list(_CLOUD_PATH.glob("*firebase-adminsdk*.json"))
+        if matches:
+            return matches[0]
+
+    # Render Secret Files are mounted here even when FIREBASE_KEY is unset.
+    secrets_dir = Path("/etc/secrets")
+    if not _configured_cloud_path and secrets_dir.is_dir():
+        matches = list(secrets_dir.glob("*.json"))
+        return matches[0] if matches else None
+
+    return None
 
 
 def _init_firebase() -> None:
@@ -56,7 +67,8 @@ def _init_firebase() -> None:
     if sa_file is None:
         print(
             "[auth] WARNING: No Firebase service account JSON found in "
-            f"{_CLOUD_PATH}. Auth-protected endpoints will reject all requests."
+            f"{_CLOUD_PATH} (exists={_CLOUD_PATH.exists()}). "
+            "Auth-protected endpoints will reject all requests."
         )
         return
 
