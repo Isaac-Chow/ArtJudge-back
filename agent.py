@@ -99,9 +99,29 @@ def expire_old_sessions(max_age_minutes: int = 60) -> None:
     for sid in expired:
         del _sessions[sid]
 
-async def run_agent(session_id: str, user_msg: UserMessage) -> ChatResponse:
-    """Run the agent for a single user message and return the structured response."""
-    deps = get_or_create_session(user_msg.session_id)
+async def run_agent(
+    user_msg_or_session_id: UserMessage | str,
+    maybe_user_msg: Optional[UserMessage] = None,
+    *,
+    session_id: Optional[str] = None,
+) -> ChatResponse:
+    """Run the agent for a single user message and return the structured response.
+
+    Supports both the current call pattern `run_agent(user_msg)` and the older
+    positional style `run_agent(session_id, user_msg)` for compatibility.
+    """
+    if isinstance(user_msg_or_session_id, str):
+        if maybe_user_msg is None or not isinstance(maybe_user_msg, UserMessage):
+            raise TypeError("run_agent requires a UserMessage when called with a session id.")
+        effective_session_id = user_msg_or_session_id
+        user_msg = maybe_user_msg
+    else:
+        if not isinstance(user_msg_or_session_id, UserMessage):
+            raise TypeError("run_agent expects a UserMessage object.")
+        user_msg = user_msg_or_session_id
+        effective_session_id = session_id or user_msg.session_id
+
+    deps = get_or_create_session(effective_session_id)
 
     content: list = [user_msg.text]
     if user_msg.image_base64:
@@ -115,7 +135,7 @@ async def run_agent(session_id: str, user_msg: UserMessage) -> ChatResponse:
                 media_type = "image/webp"
         image_bytes = base64.b64decode(b64_data)
         content.append(BinaryContent(media_type=media_type, data=image_bytes))
-        print(f"[agent] Received image of {len(image_bytes)} bytes for session {session_id}")
+        print(f"[agent] Received image of {len(image_bytes)} bytes for session {effective_session_id}")
 
     # Append user message test to history
     deps.conversion_history.append({"role": "user", "content": user_msg.text})
@@ -127,7 +147,7 @@ async def run_agent(session_id: str, user_msg: UserMessage) -> ChatResponse:
         t0 = time.perf_counter()
         result = await agent.run(content, deps=deps)
         elapsed = time.perf_counter() - t0
-        print(f"[agent] Completed in {elapsed:.1f}s for session {session_id}")
+        print(f"[agent] Completed in {elapsed:.1f}s for session {effective_session_id}")
 
         if hasattr(result, "output") and isinstance(result.output, ChatResponse):
             response: result.output

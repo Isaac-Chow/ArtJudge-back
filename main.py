@@ -23,6 +23,7 @@ from agent import run_agent
 from auth import get_current_user, optional_user
 from models import ChatResponse, UserMessage, UserInfo, ArtStyleClassification
 from streaming import stream_chat_response
+from tools.art_classifier import classify_art_style
 import repositories as repo
 from db import init_db, close_client
 from admin import router as admin_router
