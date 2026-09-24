@@ -24,7 +24,7 @@ class AgentDependencies(BaseModel):
     session_start: datetime = Field(default_factory=datetime.now)
     search_urls: List[str] = Field(default_factory=list, description="List of URLs to search for information.")
 
-model = MistralModel('mistral-small-latest')
+model = MistralModel('ministral-8b-2512')
 agent = Agent(
     model,
     deps_type=AgentDependencies,
