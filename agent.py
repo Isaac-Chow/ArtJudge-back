@@ -150,9 +150,9 @@ async def run_agent(
         print(f"[agent] Completed in {elapsed:.1f}s for session {effective_session_id}")
 
         if hasattr(result, "output") and isinstance(result.output, ChatResponse):
-            response: result.output
+            response = result.output
         elif isinstance(result, ChatResponse):
-            response: result
+            response = result
         else:
             response = ChatResponse(
                 message=str(getattr(result, "output", result)))
