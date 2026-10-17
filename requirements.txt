@@ -16,7 +16,8 @@ motor>=3.5,<4
 pymongo>=4.8,<5
 
 # --- Art classification ---
-# Art classification is handled by Mistral's vision model — no local HF model needed.
+# The direct /api/classify endpoint uses a Hugging Face image-classification pipeline.
+transformers>=4.40,<5
 Pillow>=10.3,<12
 
 # --- Utilities ---
